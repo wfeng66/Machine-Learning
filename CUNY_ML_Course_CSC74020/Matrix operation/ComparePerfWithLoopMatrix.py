@@ -26,7 +26,7 @@ def ED_loop(A, B):
 
   for i in range(m1):
     for j in range(m2):
-      Z[i, j] = np.sqrt(sum([(A[i, k] - A[j, k])**2 for k in range(n1)]))
+      Z[i, j] = np.sqrt(np.abs(sum([(A[i, k] - A[j, k])**2 for k in range(n1)])))
 
   return Z
 
@@ -38,7 +38,7 @@ def ED_vec(A, B):
   p1 = np.sum(A**2, axis=1)[:, np.newaxis]
   p2 = np.sum(B**2, axis=1)
   p3 = -2*np.dot(A, B.T)
-  return np.sqrt(p1+p2+p3)
+  return np.sqrt(np.abs(p1+p2+p3))
 
 
 def corr_loop(X):
@@ -56,7 +56,7 @@ def corr_loop(X):
         S[i,j] += (X[m, i] - u[0, i])*(X[m, j] - u[0, j])
       S[i,j] /= (n-1)
       if i == j:                       # on the diagonal of the matrix
-        sd[0,i] = np.sqrt(S[i, j])     # calculate the standard deviations
+        sd[0,i] = np.sqrt(np.abs(S[i, j]))     # calculate the standard deviations
   # initialize correlation matrix R
   R = np.zeros((n, n))
   # calculate the correlation matrix
@@ -72,8 +72,8 @@ def corr_vec(X):
   n = X.shape[1]              # the number of columns in matrix X
   u = np.mean(X, axis=0)      # u is the column means
   dev = X-u                   # dev is the deviations, xi-column_mean
-  S = np.dot(dev.transpose(), dev)   # S is the covariance matrix
-  sd = np.sqrt(np.diagonal(S))       # sd is the standard diviation matrix
+  S = np.dot(dev.transpose(),  dev)   # S is the covariance matrix
+  sd = np.sqrt(np.abs(np.diagonal(S)))       # sd is the standard diviation matrix
   sd = np.reshape(sd, (-1, sd.shape[0]))
   R = (S/sd)/np.transpose(sd)        # R is the correlation matrix 
   return R
@@ -91,11 +91,14 @@ if __name__ == "__main__":
 
     # run 2 approaches in various sizes of matrix iter_n times
     for m in rows:
+        # initiate empty list for storing performance temporarily
+        # they store the running time with same input matrix for iter_n times
         p_ed_loop = []
         p_ed_vec = []
         p_corr_loop = []
         p_corr_vec = []
         X = createX(m, ncols)
+        # run the algorithms with same input matrix for iter_n times
         for i in range(iter_n):
             
             begin_t = time.time()
@@ -131,13 +134,16 @@ if __name__ == "__main__":
     perf_ed_loop.pop(0)    # get rid of the null list at the top
     perf_ed_vec.pop(0)
     perf_corr_loop.pop(0)    
-    perf_corr_vec.pop(0)    
+    perf_corr_vec.pop(0) 
+
+    # convert the 2D lists to numpy arrays for easy computing   
     perf_ed_loop = np.array(perf_ed_loop)
     perf_ed_vec = np.array(perf_ed_vec)
     perf_corr_loop = np.array(perf_corr_loop)
     perf_corr_vec = np.array(perf_corr_vec)
 
-    # next 14 line codes refer to ComputeMatrices.py by Dr. Chia-Ling Tsai
+    # next 30 line codes refer to ComputeMatrices.py by Dr. Chia-Ling Tsai
+    # compute the mean and standard deviation for each algorithm
     u_ed_loop = np.mean(perf_ed_loop, axis = 1)
     u_ed_vec = np.mean(perf_ed_vec, axis = 1)
     u_corr_loop = np.mean(perf_corr_loop, axis = 1)
@@ -147,6 +153,7 @@ if __name__ == "__main__":
     std_corr_loop = np.std(perf_corr_loop, axis = 1)
     std_corr_vec = np.std(perf_corr_vec, axis = 1)
 
+    # visualization the performance by errorbar chart
     plt.figure(1)
     plt.errorbar(rows, u_ed_loop, yerr=std_ed_loop, color='red',label = 'Loop Solution for Distance Comp')
     plt.errorbar(rows, u_ed_vec, yerr=std_ed_vec, color='blue', label = 'Matrix Solution for Distance Comp')
@@ -154,7 +161,7 @@ if __name__ == "__main__":
     plt.ylabel('Running Time (Seconds)')
     plt.title('Comparing Distance Computation Methods')
     plt.legend()
-    plt.savefig('CompareDistanceCompFig.pdf')
+    plt.savefig('CompareDistanceCompFig18.pdf')
     plt.show()    # uncomment this if you want to see it right way
     print("result is written to CompareDistanceCompFig.pdf")
 
@@ -165,6 +172,55 @@ if __name__ == "__main__":
     plt.ylabel('Running Time (Seconds)')
     plt.title('Comparing Correlation Computation Methods')
     plt.legend()
-    plt.savefig('CompareCorrelationCompFig.pdf')
+    plt.savefig('CompareCorrelationCompFig18.pdf')
     plt.show()    # uncomment this if you want to see it right way
     print("result is written to CompareCorrelationCompFig.pdf")
+
+    
+# apply them to real data set
+import sklearn.datasets as ds 
+iris = ds.load_iris()
+bc = ds.load_breast_cancer()
+digits = ds.load_digits()
+X_iris = iris.data
+X_bc = bc.data
+X_digits = digits.data
+
+# creat empty lists for storing the time
+perf_ed_loop = []
+perf_ed_vec = []
+perf_corr_loop = []
+perf_corr_vec = []
+
+for dataset in (X_iris, X_bc, X_digits):
+    begin_t = time.time()
+    Z_loop = ED_loop(dataset, dataset)
+    end_t = time.time()
+    perf_ed_loop.append(end_t-begin_t)
+
+    begin_t = time.time()
+    Z_vec = ED_vec(dataset, dataset)
+    end_t = time.time()
+    perf_ed_vec.append(end_t-begin_t)
+
+    begin_t = time.time()
+    R_loop = corr_loop(dataset)
+    end_t = time.time()
+    perf_corr_loop.append(end_t-begin_t)
+
+    begin_t = time.time()
+    R_vec = corr_vec(dataset)
+    end_t = time.time()
+    perf_corr_vec.append(end_t-begin_t)  
+
+
+# output the result as a table
+from tabulate import tabulate as tb
+print('Comparing Distance Computation Methods')
+print(tb({'Data Set':['Iris', 'Breast cancer', 'Digits'], 'Loop(s)': perf_ed_loop, 'Matrix(s)': perf_ed_vec}, headers="keys", tablefmt='fancy_grid'))
+
+print("\n\n", 'Comparing Correlation Computation Methods')
+print(tb({'Data Set':['Iris', 'Breast cancer', 'Digits'], 'Loop(s)': perf_corr_loop, 'Matrix(s)': perf_corr_vec}, headers="keys", tablefmt='fancy_grid'))
+
+
+
