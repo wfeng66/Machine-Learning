@@ -19,7 +19,7 @@ class bigram(unigram):
         #self.biwordList = []
         self.p = {}
 
-    def fit(self):
+    def create_biDict(self):
         super(bigram, self).fit()
         for i in range(len(self.tr)-1):
             #self.biwordList.append((self.tr[i], self.tr[i+1]))
@@ -27,10 +27,23 @@ class bigram(unigram):
                 self.bigramDict[(self.tr[i], self.tr[i+1])] += 1
             else:
                 self.bigramDict[(self.tr[i], self.tr[i + 1])] = 1
+
+    def fit(self):
+        self.create_biDict()
         for (wd1, wd2), count in self.bigramDict.items():
             self.p[(wd1, wd2)] = count/self.unigramDict.get(wd1)
 
 
+class smoothing1(bigram):
+    def __init__(self, tr):
+        super(smoothing1, self).__init__(tr)
+
+    def fit(self):
+        self.create_biDict()
+        V = pp.creat_vocabulary(self.tr)   # create vocabulary
+        n_V = len(V)                # the number of torken types
+        for (wd1, wd2), count in self.bigramDict.items():
+            self.p[(wd1, wd2)] = (count+1)/(self.unigramDict.get(wd1)+n_V)
 
 
 
