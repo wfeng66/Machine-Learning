@@ -1,21 +1,20 @@
 import numpy as np
 import pandas as pd
+import preprocessing as pp
+import pickle
 
+path = "G://CUNY/NLP/Assignments/HW1/"
 # load data set
-f_train = open("train.txt", encoding='utf-8')
-f_test = open("test.txt", encoding='utf-8')
+train_l, test_l = pp.load_data(path, "train.txt", "test.txt")
 
-train_l = f_train.read().strip().split("\n")
-test_l = f_test.read().strip().split("\n")
+# tokenization
+train_tkn_l = pp.token(train_l, test_l)
+tr_tkn_no_unk_f = open(path+'tr_tkn_no_unk.txt', 'wb')
+pickle.dump(train_tkn_l, tr_tkn_no_unk_f)
+tr_tkn_no_unk_f.close()
 
-# pre-processing
-train_l = ['<s> '+ s.lower() + ' </s>' for s in train_l]
-test_l = ['<s> '+ s.lower() + ' </s>' for s in test_l]
-
-train_l = [s.split(' ') for s in train_l]
-train_l = [token for sent in train_l for token in sent]
-
-V = set(train_l)
-
-print(V)
-
+# replace words occurring once with '<unk>'
+train_tkn_unk_l = pp.mark_training_unk(train_tkn_l)
+tr_tkn_unk_f = open(path+'tr_tkn_unk.txt', 'wb')
+pickle.dump(train_tkn_l, tr_tkn_unk_f)
+tr_tkn_unk_f.close()
