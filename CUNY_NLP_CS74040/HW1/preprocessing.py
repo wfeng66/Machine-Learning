@@ -13,10 +13,11 @@ def token(train_l):
     # pre-processing
     train_l = ['<s> '+ s.lower() + ' </s>' for s in train_l]
     train_tkn_l = [s.split(' ') for s in train_l]
-    train_tkn_l = [token for sent in train_tkn_l for token in sent]
+    # train_tkn_l = [token for sent in train_tkn_l for token in sent]
     return train_tkn_l
 
 def creat_vocabulary(train_tkn_l):
+    train_tkn_l = [token for sent in train_tkn_l for token in sent]
     return set(train_tkn_l)
 
 def mark_training_unk(train_tkn_l):
