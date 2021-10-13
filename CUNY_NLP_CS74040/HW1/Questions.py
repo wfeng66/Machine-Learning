@@ -144,7 +144,7 @@ n_V = len(set(tr_tkn_nopad_l_1d))
 for i in range(len(sent)-1):
     if i == 0:
         if sent[i] == '<unk>':
-            log_p = m.log2(1/n_V)
+            log_p = m.log2(1/+n_V)
         else:
             log_p = m.log2(smModel.p1[sent[i]])
         print('p({0}) = {1:.6f},'.format(sent[i], log_p))
@@ -160,3 +160,32 @@ print('under Bigram with add-a smoothing is {:.6f}'.format(sum_p))
 l = sum_p/len(sent)
 print('The perplexity is ', pow(2, -l))
 
+# Bigram with discounting and Katz backoff
+print('\nBigram with discounting and Katz backoff:')
+katzModel = model.katz(tr_tkn_nopad_l)
+katzModel.fit()
+# save the model
+katzModel_f = open(path+'katzModel.txt', 'wb')
+pickle.dump(katzModel, katzModel_f)
+katzModel_f.close()
+sum_p = 0
+tr_tkn_nopad_l_1d = [token for sent in tr_tkn_nopad_l for token in sent]
+n_V = len(set(tr_tkn_nopad_l_1d))
+for i in range(len(sent)-1):
+    if i == 0:
+        if sent[i] == '<unk>':
+            log_p = m.log2(1/+n_V)
+        else:
+            log_p = m.log2(katzModel.p1[sent[i]])
+        print('p({0}) = {1:.6f},'.format(sent[i], log_p))
+    else:
+        if (sent[i], sent[i+1]) in katzModel.p2:
+            log_p = m.log2(katzModel.p2[(sent[i], sent[i+1])])
+        else:
+            log_p = m.log2(katzModel.a.get(sent[i])*katzModel.p1.get(sent[i+1]))
+        print('p({0}|{1}) = {2:.6f},'.format(sent[i + 1], sent[i], log_p))
+    sum_p += log_p
+print('The log probability of "I look forward to hearing your reply ." ')
+print('under Bigram with with discounting and Katz backoff is {:.6f}'.format(sum_p))
+l = sum_p/len(sent)
+print('The perplexity is ', pow(2, -l))
