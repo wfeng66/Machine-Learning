@@ -10,6 +10,8 @@ path = "G://CUNY/NLP/Assignments/HW1/"
 # load data set
 train_l, test_l = pp.load_data(path, "train.txt", "test.txt")
 
+# Following comment lines are used for tokenization and replace once words, and save the results as files
+# If you have the dump files, you don't need them
 # tokenization and save the token files
 # train_tkn_l = pp.token(train_l)
 # tr_tkn_no_unk_f = open(path+'tr_tkn_no_unk.txt', 'wb')
@@ -36,31 +38,32 @@ tr_tkn_unk_f.close()
 
 
 # question 1
-voc_unk = pp.creat_vocabulary(train_tkn_unk_l)
-# voc_unk = set(train_tkn_unk_l)
+voc_unk = pp.creat_vocabulary(train_tkn_unk_l)          # create vocabulary by training tokens with '<unk>' mark
 print('\nQuestion 1:\n'+'-'*50)
 print('There are {} word types in the training corpus.'.format(len(voc_unk)-1))
 
 # question 2
 print('\nQuestion 2:\n'+'-'*50)
-train_tkn_l = pp.token(train_l)
-train_tkn_l = [token for sent in train_tkn_l for token in sent]
+train_tkn_l = pp.token(train_l)                                     # tokenization
+train_tkn_l = [token for sent in train_tkn_l for token in sent]     # convert 2d list to 1d list
 print('There are {} word tokens in the training corpus.'.format(len(train_tkn_l)))
 
 # question 3
 print('\nQuestion 3:\n'+'-'*50)
 train_l, test_l = pp.load_data(path, "train.txt", "test.txt")
-train_tkn_l = pp.token(train_l)
-train_tkn_l = [token for sent in train_tkn_l for token in sent]
-tr_voc_no_unk = set(train_tkn_l)
-test_tkn_l = pp.token(test_l)
-test_tkn_l = [token for sent in test_tkn_l for token in sent]
+train_tkn_l = pp.token(train_l)                                     # tokenization
+train_tkn_l = [token for sent in train_tkn_l for token in sent]     # convert 2d list to 1d list
+tr_voc_no_unk = set(train_tkn_l)                                    # create vocabulary
+test_tkn_l = pp.token(test_l)                                       # tokenization
+test_tkn_l = [token for sent in test_tkn_l for token in sent]       # convert 2d list to 1d list
 no_seen_tkn = 0
+# count the number of words haven't seen in training corpus
 for wd in test_tkn_l:
     if wd not in tr_voc_no_unk:
         no_seen_tkn += 1
 print("{:.4%} of word tokens in the test corpus did not occur in training.".format(no_seen_tkn/len(test_tkn_l)))
 no_seen_voc = 0
+# count the number of word types haven't seen in training corpus
 test_voc_no_unk = set(test_tkn_l)
 for wd in test_voc_no_unk:
     if wd not in tr_voc_no_unk:
@@ -88,6 +91,8 @@ test_bigramDict_unk = pp.create_bigramDict(test_tkn_unk_l)
 # test_bigramDict_unk_f = open(path+'test_bigramDict_unk.txt', 'wb')
 # pickle.dump(test_bigramDict_unk, test_bigramDict_unk_f)
 # test_bigramDict_unk_f.close()
+
+# load bigram dictionary saved before
 test_bigramDict_unk_f = open(path+'test_bigramDict_unk.txt', 'rb')
 test_bigramDict_unk = pickle.load(test_bigramDict_unk_f)
 test_bigramDict_unk_f.close()
@@ -95,6 +100,7 @@ tr_bigramDict_unk_f = open(path+'tr_bigramDict_unk.txt', 'rb')
 tr_bigramDict_unk = pickle.load(tr_bigramDict_unk_f)
 tr_bigramDict_unk_f.close()
 no_seen_bigram = 0
+# count the number of bigrams did not occur in training corpus
 for bg in test_bigramDict_unk.keys():
     if bg not in tr_bigramDict_unk.keys():
         no_seen_bigram += 1
@@ -139,11 +145,7 @@ sum_p = 0
 unk = False
 for i in range(len(sent)-1):
     if i == 0:
-        if sent[i] == '<unk>':
-            print("p({}) doesn't exist in training corpus, no log probability.".format(sent[i]))
-            unk = True
-        else:
-            log_p = m.log2(biModel.p1[sent[i]])
+        log_p = m.log2(biModel.p1[sent[i]])
         print('p({0}) = {1:.6f},'.format(sent[i], log_p))
     else:
         if (sent[i], sent[i+1]) in biModel.p2:
@@ -255,52 +257,30 @@ print('Unigram:')
 uniModel = model.unigram(tr_tkn_nopad_unk_l)
 uniModel.fit()
 sum_p = 0
-unk = False
 for sent in test_tkn_nopad_unk_l:
-    if unk:
-        break
     for wd in sent:
-        if wd == '<unk>' or wd not in uniModel.unigramDict.keys():
-            unk = True
-        else:
-            log_p = m.log2(uniModel.p1[wd])
-            sum_p += log_p
-if unk:
-    print('Because there are unknown token, no log probability for entire test corpus under Unigram.')
-else:
-    print('The log probability of entire test corpus under Unigram is {:.6f}'.format(sum_p))
-    l = sum_p/len(pp.creat_vocabulary(test_tkn_nopad_unk_l))
-    print('The perplexity is ', pow(2, -l))
+        log_p = m.log2(uniModel.p1[wd])
+        sum_p += log_p
+print('The log probability of entire test corpus under Unigram is {:.6f}'.format(sum_p))
+l = sum_p/len(pp.creat_vocabulary(test_tkn_nopad_unk_l))
+print('The perplexity is ', pow(2, -l))
 
 # Bigram Model
 print('\nBigram:')
-# train_l, test_l = pp.load_data(path, "train.txt", "test.txt")
-# test_tkn_nopad_l = [sent.split(' ') for sent in test_l]
-# tr_tkn_nopad_l = [s.split(' ') for s in train_l]        # tokenization
-# tr_voc_nopad = pp.creat_vocabulary(tr_tkn_nopad_l)
-# replace '<unk>' in test corpus
-# for sent in test_tkn_nopad_unk_l:
-#     for i in range(len(sent)):
-#         if sent[i] not in tr_voc_nopad:
-#             sent[i] = '<unk>'
-
 biModel = model.bigram(tr_tkn_nopad_unk_l)
 biModel.fit()
 sum_p = 0
-unk = False
+unk = False                     # if meet the bigram never seen in training corpus, unk = True
 for sent in test_tkn_nopad_unk_l:
     if unk:
         break
     for i in range(len(sent)-1):
-        if i == 0:
-            if sent[i] == '<unk>' or sent[i] not in biModel.unigramDict.keys():
-                unk = True
-            else:
-                log_p = m.log2(biModel.p1[sent[i]])
-        else:
+        if i == 0:              # The first word in a sentence, use p(w_1) instead of p(w_i|w_(i-1))
+            log_p = m.log2(biModel.p1[sent[i]])
+        else:                   # subsequent words in a sentence
             if (sent[i], sent[i+1]) in biModel.p2:
                 log_p = m.log2(biModel.p2[(sent[i], sent[i+1])])
-            else:
+            else:               # the bigram haven't seen in the training corpus
                 unk = True
         if not unk:
             sum_p += log_p
