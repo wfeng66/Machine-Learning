@@ -143,20 +143,27 @@ def train_perceptron(X_bc, y_bc):
     loss_mat_pc_l_in = list()   # store loss history of training data for initialization of linear regression weight
     loss_mat_pc_l_out = list()  # store loss history of test data for initialization of linear regression weight
     for i in range(5):          # train 5 times with various data set in different initialization
+        # create various data set for each time
         X_bc_train = np.concatenate((X_bc[:i*100], X_bc[(i+1)*100:]), axis=0)
         y_bc_train = np.concatenate((y_bc[:i*100], y_bc[(i+1)*100:]), axis=0)
         X_bc_test = X_bc[i*100: (i+1)*100]
         y_bc_test = y_bc[i*100: (i+1)*100]
+        # initialize weights with first training data entry
         pc_i = Perceptron(X_bc_train, y_bc_train, X_bc_test, y_bc_test, 10000, 0.01, 'i')
         pc_i.train()
-        loss_mat_pc_i_in.append(pc_i.loss_hist_in)
+        # record loss history
+        loss_mat_pc_i_in.append(pc_i.loss_hist_in) 
         loss_mat_pc_i_out.append(pc_i.loss_hist_out)
+        # initialize weights with random
         pc_r = Perceptron(X_bc_train, y_bc_train, X_bc_test, y_bc_test, 10000, 0.01, 'r')
         pc_r.train()
+        # record loss history
         loss_mat_pc_r_in.append(pc_r.loss_hist_in)
         loss_mat_pc_r_out.append(pc_r.loss_hist_out)
+        # initialize weights with linear regression
         pc_l = Perceptron(X_bc_train, y_bc_train, X_bc_test, y_bc_test, 10000, 0.01, 'l')
         pc_l.train()
+        # record loss history
         loss_mat_pc_l_in.append(pc_l.loss_hist_in)
         loss_mat_pc_l_out.append(pc_l.loss_hist_out)
     return loss_mat_pc_i_in, loss_mat_pc_i_out, loss_mat_pc_r_in, loss_mat_pc_r_out, loss_mat_pc_l_in, loss_mat_pc_l_out
@@ -171,20 +178,27 @@ def train_Pocket(X_bc, y_bc):
     loss_mat_l_in = list()   # store loss history of training data for initialization of linear regression weight
     loss_mat_l_out = list()  # store loss history of test data for initialization of linear regression weight
     for i in range(5):       # train 5 times with various data set in different initialization
+        # create various data set for each time
         X_bc_train = np.concatenate((X_bc[:i*100], X_bc[(i+1)*100:]), axis=0)
         y_bc_train = np.concatenate((y_bc[:i*100], y_bc[(i+1)*100:]), axis=0)
         X_bc_test = X_bc[i*100: (i+1)*100]
         y_bc_test = y_bc[i*100: (i+1)*100]
+        # initialize weights with first training data entry
         pkt_i = pocket(X_bc_train, y_bc_train, X_bc_test, y_bc_test, 10000, 0.01, 'i')
         pkt_i.train()
+        # record loss history
         loss_mat_i_in.append(pkt_i.loss_hist_in)
         loss_mat_i_out.append(pkt_i.loss_hist_out)
+        # initialize weights with random
         pkt_r = pocket(X_bc_train, y_bc_train, X_bc_test, y_bc_test, 10000, 0.01, 'r')
         pkt_r.train()
+        # record loss history
         loss_mat_r_in.append(pkt_r.loss_hist_in)
         loss_mat_r_out.append(pkt_r.loss_hist_out)
+        # initialize weights with linear regression
         pkt_l = pocket(X_bc_train, y_bc_train, X_bc_test, y_bc_test, 10000, 0.01, 'l')
         pkt_l.train()
+        # record loss history
         loss_mat_l_in.append(pkt_l.loss_hist_in)
         loss_mat_l_out.append(pkt_l.loss_hist_out)
     return loss_mat_i_in, loss_mat_i_out, loss_mat_r_in, loss_mat_r_out, loss_mat_l_in, loss_mat_l_out
@@ -194,7 +208,7 @@ def viz(loss_mat_pc_i_in, loss_mat_pc_i_out, loss_mat_pc_r_in, loss_mat_pc_r_out
 loss_mat_i_in, loss_mat_i_out, loss_mat_r_in, loss_mat_r_out, loss_mat_l_in, loss_mat_l_out):
     # visualize loss for various initializations
     import matplotlib.pyplot as plt
-    x = range(0, 10001, 100)
+    x = range(0, 10001, 100)                # epochs
     fig, ax = plt.subplots(2,3, figsize=(20,8))
     ax[0,0].plot(x, loss_mat_pc_i_in, 'b', label="loos_i_in")
     ax[0,0].plot(x, loss_mat_pc_i_out, 'r', label="loos_i_out")
