@@ -3,6 +3,10 @@ import pandas as pd
 
 def load_data(path, tr, ts):
     # load data set
+    # parameters:   path - string, path store the files
+    #               tr   - string, training corpus file name
+    #               ts   - string, test corpus file name
+    # return 2 list, training and test
     f_train = open(path+tr, encoding='utf-8')
     f_test = open(path+ts, encoding='utf-8')
     train_l = f_train.read().strip().split("\n")
@@ -10,7 +14,13 @@ def load_data(path, tr, ts):
     return train_l, test_l
 
 def token(train_l, padding = 1):
-    # pre-processing
+    # tokenization
+    # parameters:   train_l - list, each element is a string of sentence
+    #               padding - the padding approach
+    #                           1: only pad '</s>' at the end of the sentence
+    #                           2: pad '<s>' at the beginning and '</s>' at the end of the sentence
+    # return a 2d list, each row corresponding to a sentence
+    # lowercase and padding
     if padding == 2:
         train_l = ['<s> ' + s.lower() + ' </s>' for s in train_l]
     elif padding == 1:
@@ -18,14 +28,22 @@ def token(train_l, padding = 1):
     else:
         pass
     train_tkn_l = [s.split(' ') for s in train_l]
-    # train_tkn_l = [token for sent in train_tkn_l for token in sent]
     return train_tkn_l
 
 def creat_vocabulary(train_tkn_l):
+    # train_tkn_l - a 2d list including tokenized corpus
+    # return a set type of vocabulary, includes all unique data type included in input corpus
     train_tkn_l = [token for sent in train_tkn_l for token in sent]
     return set(train_tkn_l)
 
 def mark_training_unk(train_tkn_l, test_tkn_l, test=False):
+    # this function replace the once word with '<unk>'
+    # parameters:   train_tkn_l - tokenized 2d training list
+    #               test_tkn_l  - tokenized 2d test list
+    #               test        - if replace the test list
+    #                               True:  replace
+    #                               False: don't replace
+    # return two list with '<unk>'. If test=False, the test_tkn_l is same as the input
     # find the words occurring once in the training data
     from collections import Counter
     tr_tkn_l_1d = [token for sent in train_tkn_l for token in sent]
@@ -46,11 +64,12 @@ def mark_training_unk(train_tkn_l, test_tkn_l, test=False):
 
 
 def create_bigramDict(data):
-    bigramDict = {}
-    for sent in data:
-        for i in range(len(sent) - 1):
-            if (sent[i], sent[i+1]) in bigramDict:
+    # create bigram dictionary
+    bigramDict = {}         # bigram dictionary
+    for sent in data:       # iterate sentences
+        for i in range(len(sent) - 1):      # iterate tokens
+            if (sent[i], sent[i+1]) in bigramDict:      # the token pair exist in bigramDict
                 bigramDict[(sent[i], sent[i+1])] +=1
-            else:
+            else:                                       # new token pair
                 bigramDict[(sent[i], sent[i + 1])] = 1
     return bigramDict
