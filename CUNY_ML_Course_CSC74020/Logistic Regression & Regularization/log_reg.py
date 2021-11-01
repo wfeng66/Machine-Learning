@@ -9,7 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 class log_reg():
-    def __init__(self, lr=0.01, epoch=100000, batch_size=4, fold=5, init='random') -> None:
+    def __init__(self, lr=0.25, epoch=100000, batch_size=4, fold=5, init='random') -> None:
         self.init = init
         self.epoch = epoch
         self.lr = lr
@@ -19,10 +19,10 @@ class log_reg():
         self.loss_out = []
         
     def fold(self):
-        # self.X_val, self.Y_val= self.X[400:], self.Y[400:]
-        # self.X, self.Y = self.X[:400], self.Y[:400]
-        self.X_val, self.Y_val= self.X[50:], self.Y[50:]
-        self.X, self.Y = self.X[:50], self.Y[:50]
+        self.X_val, self.Y_val= self.X[400:], self.Y[400:]
+        self.X, self.Y = self.X[:400], self.Y[:400]
+        # self.X_val, self.Y_val= self.X[50:], self.Y[50:]
+        # self.X, self.Y = self.X[:50], self.Y[:50]
     
     def init_w(self):
         if self.init == 'zero':
@@ -42,16 +42,18 @@ class log_reg():
         return np.dot(x, self.W)
     
     def gradient(self, X, Y):
-        numerator = np.dot(Y, X)
+        # numerator = np.dot(Y, X)
         # print('W: ', self.W.shape)
         # print('X.T: ', X.T.shape)
         # print('Y: ', Y.shape)
         #tmp = np.dot(X.T, self.W)
-        #e_exp = np.dot(Y, np.dot(X, self.W))
-        #return -np.sum(numerator/(1+np.exp(e_exp)))/X.shape[0]
+        # e_exp = np.dot(Y, np.dot(X, self.W))
+        # return -np.sum(numerator/(1+np.exp(e_exp)))/X.shape[0]
         prev_y = self.sigmoid(self.z(X))
         # print('prev:', prev_y.shape, 'Y:', Y.shape, 'X.T:', X.T.shape)
-        return (1/self.m)*np.dot(X.T, self.sigmoid(self.z(X))-Y)+2*self.wd*self.W
+        # return (1/self.m)*np.dot(X.T, self.sigmoid(self.z(X))-Y)+2*self.wd*self.W
+        return -(1/self.m)*np.dot(X.T, prev_y*(1-prev_y)*(Y-prev_y))
+    
     
     def update(self, X, Y):
         # delata = self.gradient(X, Y)
@@ -94,8 +96,10 @@ class log_reg():
         self.m, self.n = self.X.shape
         self.init_w()
         for _ in range(self.epoch):
-            # if _ == 1000:
-            #     self.lr = self.lr/10
+            if _ == 10000:
+                self.lr = self.lr/10
+            elif _== 50000:
+                self.lr = self.lr/10
             for i in range((self.m-1)//self.batch_size+1):
                 xb = self.X[i*self.batch_size:(i+1)*self.batch_size]
                 yb = self.Y[i*self.batch_size:(i+1)*self.batch_size]
@@ -132,21 +136,15 @@ def pca_tran(X, n):
     
     
 
-# np.random.seed(12)
-# num_observations = 5000
-# x1 = np.random.multivariate_normal([0, 0], [[1, .75],[.75, 1]], num_observations)
-# x2 = np.random.multivariate_normal([1, 4], [[1, .75],[.75, 1]], num_observations)
-# simulated_separableish_features = np.vstack((x1, x2)).astype(np.float32)
-# simulated_labels = np.hstack((np.zeros(num_observations),
-#                               np.ones(num_observations)))
+
 
 
 
 lr = log_reg()
-# X_bc = pca_tran(X_bc, 5)
+# X_bc = pca_tran(X_bc, 30)
 scaler = StandardScaler() 
 X_bc = scaler.fit_transform(X_bc)
-W, loss_in, loss_out = lr.fit(X_bc, y_bc, 0.00001)
+W, loss_in, loss_out = lr.fit(X_bc, y_bc, 0.00002)
 
 
 
