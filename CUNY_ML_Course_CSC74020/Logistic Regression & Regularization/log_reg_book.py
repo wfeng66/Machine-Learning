@@ -34,7 +34,8 @@ class log_reg():
             return  
     
     def sigmoid(self, z):
-        return 1.0/(1+np.exp(-z))
+        e = np.exp(z)
+        return e/(1+e)
     
     def z(self, x):
         # zz = np.dot(x, self.W)
@@ -49,10 +50,20 @@ class log_reg():
         #tmp = np.dot(X.T, self.W)
         # e_exp = np.dot(Y, np.dot(X, self.W))
         # return -np.sum(numerator/(1+np.exp(e_exp)))/X.shape[0]
-        prev_y = self.sigmoid(self.z(X))
+        # prev_y = self.sigmoid(self.z(X))
         # print('prev:', prev_y.shape, 'Y:', Y.shape, 'X.T:', X.T.shape)
-        return (1/self.m)*np.dot(X.T, self.sigmoid(self.z(X))-Y)+2*self.wd*self.W
+        # return (1/self.m)*np.dot(X.T, self.sigmoid(self.z(X))-Y)+2*self.wd*self.W
         # return -(1/self.m)*np.dot(X.T, prev_y*(1-prev_y)*(Y-prev_y))
+        # return (-1/X.shape[0])*np.sum(((Y.reshape(-1, 1)*X)/(1 + np.exp(Y*self.z(X))).reshape((-1,1))) , axis=0) +2*self.wd*self.W
+        # print((Y.reshape(-1, 1)*X).shape)
+        # print((1 + np.exp(Y*self.z(X))).shape)
+        g = np.zeros((X.shape[1], ))
+        for i in range(len(X)):
+            a = 0 
+            for j in range(len(X[i])):
+                a = a + self.W[j]*X[i][j]
+            g = g + ((Y[i]*X[i])/(1+np.exp(Y[i]*a)))
+        return -g/(X.shape[0])
     
     
     def update(self, X, Y):
@@ -71,10 +82,17 @@ class log_reg():
         # prev_y = self.sigmoid(self.z(x))
         # print(prev_y[:5])
         # print(y[:5])
-        l = -(1/x.shape[0])*np.sum(y*np.log(self.sigmoid(self.z(x)))+\
-            (1-y)*np.log(1-self.sigmoid(self.z(x)))) + self.wd*np.dot(self.W, self.W.T)
+        # l = -(1/x.shape[0])*np.sum(y*np.log(self.sigmoid(self.z(x)))+\
+        #     (1-y)*np.log(1-self.sigmoid(self.z(x)))) + self.wd*np.dot(self.W, self.W.T)
         # print(l)
-        return l
+        # return (1/x.shape[0])*np.sum(np.log(1 + np.exp(-y*self.z(x))) , axis=0) + self.wd*np.dot(self.W, self.W.T)
+        loss = 0
+        for i in range(len(x)):
+            a = 0
+            for j in range(len(x[i])):
+                a = a + self.W[j]*x[i][j]
+            loss = loss + np.log(1+np.exp(-y[i]*a))
+        return loss/x.shape[0]
     
     def fit(self, X, Y, wd=0.0): 
         """Train the model
@@ -144,7 +162,7 @@ lr = log_reg()
 # X_bc = pca_tran(X_bc, 30)
 scaler = StandardScaler() 
 X_bc = scaler.fit_transform(X_bc)
-W, loss_in, loss_out = lr.fit(X_bc, y_bc, 0.00002)
+W, loss_in, loss_out = lr.fit(X_bc, y_bc, 0.002)
 
 
 
