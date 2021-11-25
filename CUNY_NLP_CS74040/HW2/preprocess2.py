@@ -6,19 +6,18 @@ class process():
         :param ts_dir: string, the absolute path of test data set, including file name
         :param para_dir: string, the absolute path of parameters file, including file name
         '''
-        self.tr_dir = tr_dir
-        self.ts_dir = ts_dir
-        # self.para_dir = tr_dir
+        self.tr_dir = tr_dir            # training data file name
+        self.ts_dir = ts_dir            # test data file name
         self.tr_data, self.ts_data = {}, {}
         self.read_data()                # read training and test data
-        # self.v = self.load_voc()             # the list of vocabulary
-        self.fit()
+        self.fit()                      # clean data
 
 
     def read_data(self):
         '''
-
-        :return:
+        load data from files
+        no parameter
+        :return:    no return, all results are saved as the properties of the object
         '''
         classes = set()
         # read the training file
@@ -43,7 +42,6 @@ class process():
             example_ts = line_ts.split()
             ts_data.append(example_ts)
         self.ts_data['pred'] = ts_data      # the key of 'pred' indicate this test data doesn't include label
-
 
 
     def combDoc(self, docs):
@@ -79,41 +77,38 @@ class process():
     def create_v(self):
         '''
         create vocabulary
+        no parameter
         :return: no, the result save in self.v
         '''
         self.v = set()
         for cl in self.classes:
             self.v.update(set(self.tr_tkn[cl]))
 
+    def rmvDigitTags(self, doc):
+        '''
+        remove the digits and some html tags in document
+        combine the documents into one document before calling this function
+        :param doc: (list) the document to be removed the digits, each element is one document
+        :return: (list) the cleaned document
+        '''
+        import re
+        result = [re.sub(r"(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)|^rt|http.+?", "", d)
+                  for d in doc]
+        result = [re.sub(r"\d+", "", d) for d in result]
+        return result
 
 
     def fit(self):
+        '''
+        main preprocessing
+        no parameter
+        :return:    no return, all results are saved as the properties of the object
+        '''
         self.tr_tkn, self.ts_tkn = {}, {}
         for cl in self.classes:
-            self.tr_tkn[cl] = self.token(self.combDoc(self.tr_data[cl]))
-        self.create_v()
+            self.tr_tkn[cl] = self.token(self.rmvDigitTags(self.combDoc(self.tr_data[cl])))
+        self.create_v()             # create vocabulary
         self.ts_tkn['pred'] = list(map(self.token, self.ts_data['pred']))
-        # self.count_p_w()
-        # self.count_p_w()
-        # import pickle
-        # model_f= open( path + 'model.txt', 'wb')
-        # pickle.dump()
-
-
-    def test(self):
-        self.fit()
-        print(self.tr_data)
-        print(self.ts_data)
-        print(self.classes)
-        print(len(self.v))
-        print(self.v)
-        # self.count_p_prior()
-        # self.fit()
-        # self.count_p_w()
-        # print(self.p_w)
-        # print(len(self.p_w))
-        # print(len(self.v))
-
 
 
 def main(tr_dir, ts_dir, para_dir):
@@ -125,16 +120,13 @@ def main(tr_dir, ts_dir, para_dir):
 
 
 if __name__ == '__main__':
+    # parameters parse
     import argparse
     parser = argparse.ArgumentParser(description='Naive Bayes Classifier')
     parser.add_argument('tr_dir', type=str, help='training path')
     parser.add_argument('ts_dir', type=str, help='test path')
     parser.add_argument('para_dir', type=str, help='parameter path')
     args = parser.parse_args()
+    # call main function
     main(tr_dir = args.tr_dir, ts_dir = args.ts_dir, para_dir = args.para_dir)
 
-#
-# nb = process('G://CUNY/NLP/Assignments/HW2/train2.txt', 'G://CUNY/NLP/Assignments/HW2/test2.txt')
-# nb.test()
-# run
-# python preprocess2.py G://CUNY/NLP/Assignments/HW2/train2.txt G://CUNY/NLP/Assignments/HW2/test2.txt G://CUNY/NLP/Assignments/HW2/movie-review-small.NB
