@@ -13,7 +13,7 @@ Instructions:
 
 1. Clone the repository
 2. Copy the contents of the _final_project_ to Google Drive (to utilize the Google Collab environment) to the root folder of the Google Drive. All of the project documents should exist in _final_project_ folder in the root of your drive.
-3. Download the contents of [this folder](https://drive.google.com/drive/folders/1Dyx5UVFImzcy__qtt8-fBeW2bmYqVjoj?usp=sharing) and put them in the _final_project_ folder in your drive. These files are too large to be hosted on Github but they contain the initial weights, and the experiment results in _Experimentation_ folder.
+3. Download the contents of [this folder](https://drive.google.com/drive/folders/13Ce-GzKKSdmkB5mkr2w5MtV1dJxfOW7J?usp=sharing) and put them in the _final_project_ folder in your drive. These files are too large to be hosted on Github but they contain the initial weights, and the experiment results in _Experimentation_ folder.
 4. Open MatterportTrainMammals_final.ipynb in Google Collab
 5. Follow instructions in the notebook and run each portion.
 6. In the Load MaskRCNN and dependencies section, ensure that the ROOT_DIR variable set tp '/content/drive/MyDrive/final_project/' represents the location where you copied the repository.
