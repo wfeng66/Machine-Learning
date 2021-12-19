@@ -25,3 +25,5 @@ Instructions:
 * !cp /content/temp_log/mammal20211219T1808/events.out.tfevents.1639937351.999d6dda7416 "/content/drive/MyDrive/final_project/Experimentation/12192021/"
 The timestamps associated with the model training will be different when you run this. Change mammal20211219T1808 to relevant folder.
 11. To replicate the loss analysis in the Visualizing & Understanding Losses section, ensure that the location of the experimentation folder is in /content/drive/MyDrive/final_project/Experimentation/. This folder will contain all the results of experiments we have conducted. We use tensor board to visualize losses.
+
+Thanks every group members for your unlimited creativity and hard work!
