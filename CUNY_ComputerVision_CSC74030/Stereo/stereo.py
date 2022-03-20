@@ -42,11 +42,6 @@ class Pairs:
             if k == 99:
                 break
 
-        # cv2.imshow('Campus', self.imgComb)
-        # cv2.setMouseCallback('Campus', self.click_event)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
 
     def saveCoor(self):
         pl = np.zeros((20, 2))
