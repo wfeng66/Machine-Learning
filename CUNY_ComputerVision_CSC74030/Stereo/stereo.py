@@ -66,9 +66,10 @@ class getF:
         self.pl = np.append(self.pl, np.ones((self.pl.shape[0], 1)), axis=1)
         self.pr = np.append(self.pr, np.ones((self.pr.shape[0], 1)), axis=1)
         # normalize points
-        self.T = self.conNormMat()
-        self.pl = self.pl@self.T.T
-        self.pr = self.pr@self.T.T
+        self.Tl = self.conNormMat(self.pl[0], self.pl[1])
+        self.Tr = self.conNormMat(self.pr[0], self.pr[1])
+        self.pl = self.pl@self.Tl.T
+        self.pr = self.pr@self.Tr.T
         # create coefficient matrix A by using corresponding points in two images
         self.A = self.conA()
 
@@ -78,9 +79,9 @@ class getF:
         return np.array(A)
 
 
-    def conNormMat(self):
-        Xc = (np.mean(self.pl[:, 0]) + np.mean(self.pr[:, 0]))/2
-        Yc = (np.mean(self.pl[:, 1]) + np.mean(self.pr[:, 1]))/2
+    def conNormMat(self, x, y):
+        Xc = np.mean(x)
+        Yc = np.mean(y)
         Ds = np.sqrt(Xc**2 + Yc**2)
         scale = np.sqrt(2) / Ds
         T = np.eye(3, 3)
@@ -95,15 +96,18 @@ class getF:
         # enforce singularity constraint
         u, d, v = np.linalg.svd(Fa)
         d[-1] = 0
-        F = u@d@v
+        Fn = u@np.diag(d)@v
+        # denormalize
+        F = self.Tr.T@Fn@self.Tl
         return F
 
 
-    def
+
 
 
 gF = getF()
-Fb = gF.findF()
+F = gF.findF()
+print(F)
 
 
 
