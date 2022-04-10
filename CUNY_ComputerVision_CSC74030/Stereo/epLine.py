@@ -2,12 +2,19 @@ import numpy as np
 import cv2
 import stereo
 
+"""
+This script is used for finding and drawing epolar lines by using fundamental matrix.
+Control point pairs are used for calculate the F matrix, 
+while the test point pairs are used to test the epolar lines 
+"""
 
 # load the images and point pairs
 img1, img2, ctrl_l, ctrl_r, test_l, test_r = stereo.load()
 
 # calculate the fundamental matrix
 F, mask = cv2.findFundamentalMat(ctrl_l,ctrl_r,cv2.FM_LMEDS)
+# gF = stereo.getF()
+# F = gF.findF()
 
 [ctrl_l_homo, ctrl_r_homo, test_l_homo, test_r_homo] = stereo.homo([ctrl_l, ctrl_r, test_l, test_r])
 

@@ -3,16 +3,18 @@ import numpy as np
 from matplotlib import pyplot as plt
 import stereo
 
+'''
 path='G://CUNY/CV/Assignments/HW3/'
 im1='pic410.png'
 im2='pic430.png'
 img1 = cv2.imread(path+im1)
 img2 = cv2.imread(path+im2)
+'''
 
 gF = stereo.getF()
-# F = gF.findF()
-F, mask = cv2.findFundamentalMat(gF.plo,gF.pro,cv2.FM_LMEDS)
-
+F = gF.findF()
+# F, mask = cv2.findFundamentalMat(gF.plo,gF.pro,cv2.FM_LMEDS)
+"""
 def drawlines(img1,img2,lines,pts1,pts2):
     ''' img1 - image on which we draw the epilines for the points in img2
         lines - corresponding epilines '''
@@ -34,3 +36,7 @@ lines = lines.reshape(-1,3)
 img5,img6 = drawlines(img1,img2,lines,gF.plo,gF.pro)
 plt.subplot(121),plt.imshow(img5)
 plt.show()
+"""
+
+print('The fundamental matrix is: ')
+print(F)
