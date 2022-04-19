@@ -2,34 +2,11 @@ import numpy as np
 import cv2
 import stereo
 
-
-"""
-# load the images and point pairs
-img1, img2, ctrl_l, ctrl_r, test_l, test_r = stereo.load()
-
-F, mask = cv2.findFundamentalMat(ctrl_l,ctrl_r,cv2.FM_LMEDS)
-
-[ctrl_l_homo, ctrl_r_homo, test_l_homo, test_r_homo] = stereo.homo([ctrl_l, ctrl_r, test_l, test_r])
-print(F)
-
-lines_r = getEpLine(0, F, test_l_homo)
-lines_l = getEpLine(1, F, test_r_homo)
-
-
-# cv.computeCorrespondEpilines(pts1.reshape(-1,1,2), 1,F)
-
-
-img_l = drawlines(img1,img2,lines_l,test_l,test_r)
-img_r = drawlines(img2,img1,lines_r,test_r,test_l)
-# img_l = drawlines(img1,img2,lines_l,ctrl_l,ctrl_r)
-# img_r = drawlines(img2,img1,lines_r,ctrl_r,ctrl_l)
-"""
-
 class featureMatch:
     def __init__(self, rfile='ctrl_pr.npy', lfile='ctrl_pl.npy', im1='pic410.png', im2='pic430.png', path='G://CUNY/CV/Assignments/HW3/'):
         self.path = path
-        self.img1 = cv2.imread(path+im1)
-        self.img2 = cv2.imread(path+im2)
+        self.img1 = cv2.imread(path+im1, 0)
+        self.img2 = cv2.imread(path+im2, 0)
         self.width = self.img1.shape[1]
         self.ctrl_l = np.load(path+lfile)
         self.ctrl_r = np.load(path+rfile)
@@ -40,20 +17,38 @@ class featureMatch:
     def click_event(self, event, x, y, flags, params):
         if event == cv2.EVENT_LBUTTONDOWN:
             print(x, y)
-            self.match(x, y)
+            self.match(y, x, 5, 5)            # switch x and y
             self.img1 = cv2.circle(self.img1, (x, y), radius=5, color=(0, 0, 255), thickness=-1)
 
 
+    def match(self, x, y, x_win, y_win):
+        # edges = cv2.Canny(self.img1, 100, 200)
+        # cv2.imshow('edges', edges)
 
-    def match(self, x, y):
-        edges = cv2.Canny(self.img1, 100, 200)
-        print(type(edges))
-        print(edges.shape)
-        print(edges)
-        print(x, y)
-        print(edges[x-3: x+3, y-3: y+3])
-        cv2.imshow('edges', edges)
+        # extract feature descriptor from img1
+        ftr1 = self.img1[x-x_win: x+x_win+1, y-y_win: y+y_win+1]
+        ftr1 = (ftr1-np.mean(ftr1))/np.std(ftr1)
 
+        # find the epipolar line for the coordinate
+        [pt_homo] = stereo.homo([np.array([y, x]).reshape((-1,2))])
+        print(pt_homo)
+        line = stereo.getEpLine(0, self.F, pt_homo)
+        [line] = line
+
+        # search matching
+        dst = {}
+        color = tuple(np.random.randint(0, 255, 3).tolist())
+        x_low, x_high = x-150, x+150
+        for x_s in range(x_low, x_high):
+            y_c = int(-(line[0]*x_s+line[2])/line[1])
+            y_low, y_high = y_c - 5, y_c + 5
+            for y_s in range(y_low, y_high):
+                ftr2 = self.img2[x_s-x_win: x_s+x_win+1, y_s-y_win: y_s+y_win+1]
+                dst[(x_s, y_s)] = np.sum(np.abs(ftr1-ftr2))
+        corr_pt = min(dst, key=dst.get)
+        self.img2 = cv2.circle(self.img2, tuple(corr_pt), 5, color, -1)
+        cv2.imshow('Campus2', self.img2)
+        cv2.waitKey(0)
 
 
     def captureCoor(self):
