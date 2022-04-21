@@ -4,8 +4,6 @@ import imutils
 import drowse
 import time
 import dlib
-import numpy as np
-from scipy.spatial import distance as dist
 from threading import Thread
 
 # constants
@@ -34,7 +32,7 @@ while (True):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # drowse or not
-    drowsy, avg_ratio = drowse(THRESHHOLD, face_det, landmark, path, frame, gray)
+    drowsy, avg_ratio = drowse.drowse(THRESHHOLD, face_det, landmark, path, frame, gray)
 
     if drowsy:
         COUNT +=1

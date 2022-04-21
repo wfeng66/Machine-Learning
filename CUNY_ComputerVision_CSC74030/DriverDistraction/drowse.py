@@ -1,6 +1,7 @@
 
 def eye_ratio(eye):
   # euclidean distances in vertical
+  from scipy.spatial import distance as dist
   A = dist.euclidean(eye[1], eye[5])
   B = dist.euclidean(eye[2], eye[4])
   # euclidean distances in horizontal
@@ -10,6 +11,7 @@ def eye_ratio(eye):
 
 def shape_to_np(shape, dtype="int"):
     # initialize
+    import numpy as np
     coords = np.zeros((68, 2), dtype=dtype)
     # landmark to numpy
     for i in range(0, 68):
@@ -18,6 +20,7 @@ def shape_to_np(shape, dtype="int"):
 
 
 def drowse(tH, face_det, landmark, path, frame, gray):
+    import cv2
     # detect faces
     rects = face_det(gray, 0)
 
