@@ -44,7 +44,9 @@ def speak(tH, hist_q, shape):
     if hist_q.full():
         pre_ratio = hist_q.get()
         hist_q.put(mouth_ratio)
-        if np.abs(mouth_ratio - pre_ratio)/pre_ratio > tH:
+        change_ratio = np.abs(mouth_ratio - pre_ratio)/pre_ratio
+        print(mouth_ratio, change_ratio)
+        if change_ratio > tH:
             return True
         else:
             return False
@@ -53,10 +55,10 @@ def speak(tH, hist_q, shape):
         return False
 
 
-def drowseNspeak(tH_d, tH_s, s_queue, face_det, landmark, frame, gray):
+def drowseNspeak(tH_d, tH_s, s_queue, face_det, landmark, gray):
     # detect faces
     rects = face_det(gray, 0)
-
+    drowsy, speaking = False, False
     # loop faces
     # in this case, there should be only one face inside it
     for rect in rects:
