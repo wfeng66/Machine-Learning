@@ -1,5 +1,6 @@
 from scipy.spatial import distance as dist
 import numpy as np
+import cv2
 
 def vh_ratio(v1, v2, h):
     # this function use to calculate the ratio of vertical distance and horizontal distance
@@ -38,20 +39,34 @@ def drowse(tH, left_eye, right_eye):
     else:
         return False
 
-
+"""
 def speak(tH, hist_q, shape):
-    mouth_ratio = vh_ratio((shape[51], shape[57]), (shape[62], shape[66]), (shape[48], shape[54]))
+    A = dist.euclidean(shape[51], shape[57])
+    B = dist.euclidean(shape[62], shape[66])
+    mouth_ratio = (A + B) / 2.0
+    # mouth_ratio = vh_ratio((shape[51], shape[57]), (shape[62], shape[66]), (shape[48], shape[54]))
     if hist_q.full():
         pre_ratio = hist_q.get()
         hist_q.put(mouth_ratio)
         change_ratio = np.abs(mouth_ratio - pre_ratio)/pre_ratio
-        print(mouth_ratio, change_ratio)
         if change_ratio > tH:
             return True
         else:
             return False
     else:
         hist_q.put(mouth_ratio)
+        return False
+"""
+
+
+def speak(tH, hist_q, shape):
+    A = dist.euclidean(shape[61], shape[67])
+    B = dist.euclidean(shape[63], shape[65])
+    # mouth_ratio = vh_ratio((shape[51], shape[57]), (shape[62], shape[66]), (shape[48], shape[54]))
+    # print(A, B)
+    if B > 4 or A > 4:
+        return True
+    else:
         return False
 
 
@@ -74,5 +89,81 @@ def drowseNspeak(tH_d, tH_s, s_queue, face_det, landmark, gray):
 
     return [drowsy, speaking]
 
+    """
+def voor(tH_side, tH_ch, left_ratio_ori, chin_ori, shape, nFrame):
+    right = dist.euclidean(shape[1], shape[33])
+    left = dist.euclidean(shape[15], shape[33])
+    chin = dist.euclidean(shape[8], shape[33])
+    left_ratio = left / (left + right)
+    # print(nFrame, left_ratio, left_ratio_ori, left_ratio - left_ratio_ori, tH_side)
+    if left_ratio - left_ratio_ori > tH_side:
+        # print("True")
+        return True
+    else:
+        # print("False")
+        return False
+
+    if chin < (1-tH_ch)*chin_ori:
+        return 'chin'
+    if left_ratio - left_ratio_ori > tH_side:
+        print('Side', left_ratio - left_ratio_ori)
+        return 'side'
+    return False
+
+    if chin < (1-tH_ch)*chin_ori or (left_ratio - left_ratio_ori) > tH_side:
+        # print("True")
+        return True
+    else:
+        # print("False")
+        return False
+"""
+
+
+def pose():
+
+
+"""
+def getFaceBase(face_det, landmark, cap):
+    # detect faces
+    _, frame = cap.read()
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    rects = face_det(gray, 0)
+    # loop faces
+    # in this case, there should be only one face inside it
+    while len(rects) == 0:
+        _, frame = cap.read()
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        rects = face_det(gray, 0)
+    for rect in rects:
+        # detect facial landmarks
+        shape = landmark(gray, rect)
+        shape = shape_to_np(shape)
+        right = dist.euclidean(shape[1], shape[33])
+        left = dist.euclidean(shape[15], shape[33])
+        chin = dist.euclidean(shape[8], shape[33])
+        left_ratio = left / (left+right)
+    return left_ratio, chin
+"""
+
+
+def detect(tH_d, tH_s, tH_side, tH_ch, s_queue, left_ratio, chin, face_det, landmark, gray, nFrame):
+    # detect faces
+    rects = face_det(gray, 0)
+    drowsy, speaking, VOOR = False, False, False         # VOOR stands for vision out of road
+    # loop faces
+    # in this case, there should be only one face inside it
+    for rect in rects:
+        # detect facial landmarks
+        shape = landmark(gray, rect)
+        shape = shape_to_np(shape)
+
+        # extract eyes coordinates
+        left_eye = shape[42:48]
+        right_eye = shape[36: 42]
+        drowsy = drowse(tH_d, left_eye, right_eye)
+        speaking = speak(tH_s, s_queue, shape)
+        VOOR = pose()
+
+    return [drowsy, speaking, VOOR]
 
 
