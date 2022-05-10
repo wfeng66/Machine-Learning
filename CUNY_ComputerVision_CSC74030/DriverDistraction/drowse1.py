@@ -1,6 +1,7 @@
 from scipy.spatial import distance as dist
 import numpy as np
 import cv2
+# from pose_estimation import Pose
 
 def vh_ratio(v1, v2, h):
     # this function use to calculate the ratio of vertical distance and horizontal distance
@@ -119,7 +120,10 @@ def voor(tH_side, tH_ch, left_ratio_ori, chin_ori, shape, nFrame):
 """
 
 
-def pose():
+def head_pose(landmarks, frame, intrinsic, scorer, pose):
+    pitch, yaw, roll = pose.estimate(frame=frame, detection=landmarks, intrinsic=intrinsic, allpts=True)
+    distracted = scorer.evaluate(pitch, yaw, roll)
+    return distracted
 
 
 """
@@ -146,7 +150,8 @@ def getFaceBase(face_det, landmark, cap):
 """
 
 
-def detect(tH_d, tH_s, tH_side, tH_ch, s_queue, left_ratio, chin, face_det, landmark, gray, nFrame):
+def detect(tH_d, tH_s, s_queue, face_det, landmark, gray, landmark_head, frame,
+           intrinsic, scorer, pose):
     # detect faces
     rects = face_det(gray, 0)
     drowsy, speaking, VOOR = False, False, False         # VOOR stands for vision out of road
@@ -162,7 +167,7 @@ def detect(tH_d, tH_s, tH_side, tH_ch, s_queue, left_ratio, chin, face_det, land
         right_eye = shape[36: 42]
         drowsy = drowse(tH_d, left_eye, right_eye)
         speaking = speak(tH_s, s_queue, shape)
-        VOOR = pose()
+        VOOR = head_pose(landmark_head, frame, intrinsic, scorer, pose)
 
     return [drowsy, speaking, VOOR]
 

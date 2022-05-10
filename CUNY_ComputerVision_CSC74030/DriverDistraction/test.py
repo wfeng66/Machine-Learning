@@ -12,6 +12,10 @@ import os
 import tensorflow as tf
 import numpy as np
 import keras
+from video import Video
+from detection import Detection, Landmarks
+from pose_estimation import Pose
+from head_detection import DistractionScore
 
 # constants
 DROWSE_THRESHHOLD = 0.2
@@ -46,13 +50,15 @@ face_det = dlib.get_frontal_face_detector()
 landmark = dlib.shape_predictor(cvpath + 'shape_predictor_68_face_landmarks.dat')
 vgg16 = keras.models.load_model(dlpath)
 
-def cv(frame, left_ratio, chin, nFrame):
+def cv(frame, landmark_head, intrinsic, scorer, pose):
     # preprocess
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # [drowsy, speaking] = drowse1.drowseNspeak(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, speaking_q, face_det, landmark,
     #                                           gray)
-    [drowsy, speaking, voor] = drowse1.detect(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, SIDE_THRESHOLD, CHIN_THRESHOLD,
-                                              speaking_q, left_ratio, chin, face_det, landmark, gray, nFrame)
+    # [drowsy, speaking, voor] = drowse1.detect(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, SIDE_THRESHOLD, CHIN_THRESHOLD,
+    #                                           speaking_q, left_ratio, chin, face_det, landmark, gray, nFrame)
+    [drowsy, speaking, voor] = drowse1.detect(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, speaking_q, face_det,
+                                              landmark, gray, landmark_head, frame, intrinsic, scorer, pose)
 
     if drowsy:
         return 3
@@ -72,45 +78,63 @@ def dl(model, img):
     return dl_cls_dict[pred]
 
 
-def detect_noTemporal(cap):
+def detect_noTemporal(cap, vid):
     count_frame = 0
     length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     rslts = [[]]
+    detection = Detection(vid)
+    pose = Pose()
+    scorer = DistractionScore(PITCH_THRESH=15, YAW_THRESH=35, ROLL_THRESH=100)
     while count_frame < length:
         # capture video frame
         ret, frame = cap.read()
+        vid.get_frame()
+        shapes = detection.detect_landmarks(show='HPE')
+        if shapes is None:
+            continue
+        else:
+            landmark_head = Landmarks(shapes[0], shapes[1])
         if ret == False:
             rslts.append([count_frame, 0, 0])
         else:
-            if count_frame == 0:
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                left_ratio, chin = drowse1.getFaceBase(face_det, landmark, cap)
-            else:
-                cv_c = cv(frame, left_ratio, chin, count_frame)
-                dl_c = dl(vgg16, frame)
-                rslts.append([count_frame, cv_c, dl_c])
+            # if count_frame == 0:
+            #     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            #     left_ratio, chin = drowse1.getFaceBase(face_det, landmark, cap)
+            # else:
+            cv_c = cv(frame, landmark_head, vid.intrinsic, scorer, pose)
+            dl_c = dl(vgg16, frame)
+            rslts.append([count_frame, cv_c, dl_c])
         count_frame += 1
     return rslts
 
 
-def detect_withTemporal(cap):
+def detect_withTemporal(cap, vid):
     count_frame = 0
     DROWSE_COUNT = 0
     SPEAKING_COUNT = 0
     VOOR_COUNT = 0
     length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))     # the number of frames in a video
     rslts = [[]]
+    detection = Detection(vid)
+    pose = Pose()
+    scorer = DistractionScore(PITCH_THRESH=15, YAW_THRESH=35, ROLL_THRESH=100)
     while count_frame < length:
         # capture video frame
         ret, frame = cap.read()
+        vid.get_frame()
+        shapes = detection.detect_landmarks(show='HPE')
+        if shapes is None:
+            continue
+        else:
+            landmark_head = Landmarks(shapes[0], shapes[1])
         if ret == False:
             rslts.append([count_frame, 0])
         else:
-            if count_frame == 0:
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                left_ratio, chin = drowse1.getFaceBase(face_det, landmark, cap)
-            else:
-                cv_c = cv(frame, left_ratio, chin, count_frame)
+            # if count_frame == 0:
+            #     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            #     left_ratio, chin = drowse1.getFaceBase(face_det, landmark, cap)
+            # else:
+            cv_c = cv(frame, landmark_head, vid.intrinsic, scorer, pose)
             # dl_c = dl(vgg16, frame)
             if cv_c ==3:
                 DROWSE_COUNT += 1
@@ -180,11 +204,12 @@ if __name__ == '__main__':
         print('Processing ' + vid + '...')
         # capture a video
         cap = cv2.VideoCapture(datapath + vid)
-        rslt1 = detect_noTemporal(cap)
+        v = Video(datapath + vid)
+        rslt1 = detect_noTemporal(cap, v)
         rslt1 = pd.DataFrame(rslt1, columns=['nFrame', 'CV', 'DL'])
         rslt1['fName'] = vid
         rslts1 = rslts1.append(rslt1.iloc[1:-1, :])
-        rslt2 = detect_withTemporal(cap)
+        rslt2 = detect_withTemporal(cap, v)
         rslt2 = pd.DataFrame(rslt2, columns=['nFrame', 'CV_T'])
         rslt2['fName'] = vid
         rslt2 = compensate(rslt2)

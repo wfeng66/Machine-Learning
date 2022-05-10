@@ -6,6 +6,10 @@ import time
 import dlib
 from queue import Queue
 from threading import Thread
+from video import Video
+from detection import Detection, Landmarks
+from pose_estimation import Pose
+from head_detection import DistractionScore
 
 # constants
 DROWSE_THRESHHOLD = 0.2
@@ -30,30 +34,41 @@ nFrame = 0
 # initialize face detector and facial landmark
 face_det = dlib.get_frontal_face_detector()
 landmark = dlib.shape_predictor(path + 'shape_predictor_68_face_landmarks.dat')
-
+vid = Video('G://CUNY/CV/Final Project/Data/IMG_3261.mp4')
+detection = Detection(vid)
+pose = Pose()
+scorer = DistractionScore(PITCH_THRESH=15, YAW_THRESH=35, ROLL_THRESH=100)
 
 
 # capture a video
-cap = cv2.VideoCapture('G://CUNY/CV/Final Project/Data/IMG_3260.mp4')
+cap = cv2.VideoCapture('G://CUNY/CV/Final Project/Data/IMG_3261.mp4')
 time.sleep(1.0)
 
 # get the base line data
-left_ratio, chin = drowse1.getFaceBase(face_det, landmark, cap)
+# left_ratio, chin = drowse1.getFaceBase(face_det, landmark, cap)
 
 while (cap.isOpened()):
     # capture video frame
     _, frame = cap.read()
+    vid.get_frame()
 
     # preprocess
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # print(nFrame, _)
+    # get landmarks for head pose estimate
+    shapes = detection.detect_landmarks(show='HPE')
+    if shapes is None:
+        continue
+    else:
+        landmark_head = Landmarks(shapes[0], shapes[1])
 
     # drowse or not
     # [drowsy, speaking] = drowse1.drowseNspeak(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, speaking_q, face_det, landmark, gray)
-    [drowsy, speaking, voor] = drowse1.detect(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, SIDE_THRESHOLD, CHIN_THRESHOLD, speaking_q,
-                                              left_ratio, chin, face_det, landmark, gray, nFrame)
-
+    # [drowsy, speaking, voor] = drowse1.detect(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, SIDE_THRESHOLD, CHIN_THRESHOLD, speaking_q,
+    #                                           left_ratio, chin, face_det, landmark, gray, landmark_head, frame, vid.intrinsic, scorer)
+    [drowsy, speaking, voor] = drowse1.detect(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, speaking_q,
+                                              face_det, landmark, gray, landmark_head, frame, vid.intrinsic, scorer, pose)
     cv2.putText(frame, str(nFrame), (10, 50), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), 2)
 
     if drowsy:
