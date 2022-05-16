@@ -1,7 +1,6 @@
 from scipy.spatial import distance as dist
 import numpy as np
 import cv2
-# from pose_estimation import Pose
 
 def vh_ratio(v1, v2, h):
     # this function use to calculate the ratio of vertical distance and horizontal distance
@@ -90,7 +89,7 @@ def drowseNspeak(tH_d, tH_s, s_queue, face_det, landmark, gray):
 
     return [drowsy, speaking]
 
-    """
+
 def voor(tH_side, tH_ch, left_ratio_ori, chin_ori, shape, nFrame):
     right = dist.euclidean(shape[1], shape[33])
     left = dist.euclidean(shape[15], shape[33])
@@ -117,16 +116,13 @@ def voor(tH_side, tH_ch, left_ratio_ori, chin_ori, shape, nFrame):
     else:
         # print("False")
         return False
-"""
 
 
-def head_pose(landmarks, frame, intrinsic, scorer, pose):
-    pitch, yaw, roll = pose.estimate(frame=frame, detection=landmarks, intrinsic=intrinsic, allpts=True)
-    distracted = scorer.evaluate(pitch, yaw, roll)
-    return distracted
+
+# def pose():
 
 
-"""
+
 def getFaceBase(face_det, landmark, cap):
     # detect faces
     _, frame = cap.read()
@@ -147,11 +143,11 @@ def getFaceBase(face_det, landmark, cap):
         chin = dist.euclidean(shape[8], shape[33])
         left_ratio = left / (left+right)
     return left_ratio, chin
-"""
 
 
-def detect(tH_d, tH_s, s_queue, face_det, landmark, gray, landmark_head, frame,
-           intrinsic, scorer, pose):
+
+
+def detect(tH_d, tH_s, tH_side, tH_ch, s_queue, left_ratio, chin, face_det, landmark, gray, nFrame):
     # detect faces
     rects = face_det(gray, 0)
     drowsy, speaking, VOOR = False, False, False         # VOOR stands for vision out of road
@@ -160,14 +156,18 @@ def detect(tH_d, tH_s, s_queue, face_det, landmark, gray, landmark_head, frame,
     for rect in rects:
         # detect facial landmarks
         shape = landmark(gray, rect)
-        shape = shape_to_np(shape)
+        if shape is None:
+            print('No shape')
+            continue
+        else:
+            shape = shape_to_np(shape)
 
         # extract eyes coordinates
         left_eye = shape[42:48]
         right_eye = shape[36: 42]
         drowsy = drowse(tH_d, left_eye, right_eye)
         speaking = speak(tH_s, s_queue, shape)
-        VOOR = head_pose(landmark_head, frame, intrinsic, scorer, pose)
+        VOOR = voor(tH_side, tH_ch, left_ratio, chin, shape, nFrame)
 
     return [drowsy, speaking, VOOR]
 
