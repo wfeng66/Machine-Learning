@@ -42,18 +42,15 @@ left_ratio, chin = drowse1.getFaceBase(face_det, landmark, cap)
 
 while (cap.isOpened()):
     # capture video frame
-    ret, frame = cap.read()
+    _, frame = cap.read()
 
     # preprocess
-    if ret:
+    if _:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     else:
         continue
 
-    # print(nFrame, _)
-
     # drowse or not
-    # [drowsy, speaking] = drowse1.drowseNspeak(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, speaking_q, face_det, landmark, gray)
     [drowsy, speaking, voor] = drowse1.detect(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, SIDE_THRESHOLD, CHIN_THRESHOLD, speaking_q,
                                               left_ratio, chin, face_det, landmark, gray, nFrame)
 
@@ -95,23 +92,6 @@ while (cap.isOpened()):
     cv2.imshow("Video", frame)
     if cv2.waitKey(5) & 0xFF == ord('q'):
         break
-"""
-    if voor == 'side':
-        VOOR_COUNT += 1
-        if VOOR_COUNT >= CONT_FRAME_VISION:
-            if not VOOR_ALARM:
-                VOOR_ALARM = True
-            cv2.putText(frame, "side_ALARM", (10, 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), 2)
-    elif voor == 'chin':
-        VOOR_COUNT += 1
-        if VOOR_COUNT >= CONT_FRAME_VISION:
-            if not VOOR_ALARM:
-                VOOR_ALARM = True
-            cv2.putText(frame, "chin_ALARM", (10, 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), 2)
-    else:
-        VOOR_COUNT = 0
-        VOOR_ALARM = False
-"""
 
 
 cv2.destroyAllWindows()

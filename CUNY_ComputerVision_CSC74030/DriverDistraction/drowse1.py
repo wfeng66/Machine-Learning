@@ -1,5 +1,4 @@
 from scipy.spatial import distance as dist
-import numpy as np
 import cv2
 
 def vh_ratio(v1, v2, h):
@@ -39,24 +38,6 @@ def drowse(tH, left_eye, right_eye):
     else:
         return False
 
-"""
-def speak(tH, hist_q, shape):
-    A = dist.euclidean(shape[51], shape[57])
-    B = dist.euclidean(shape[62], shape[66])
-    mouth_ratio = (A + B) / 2.0
-    # mouth_ratio = vh_ratio((shape[51], shape[57]), (shape[62], shape[66]), (shape[48], shape[54]))
-    if hist_q.full():
-        pre_ratio = hist_q.get()
-        hist_q.put(mouth_ratio)
-        change_ratio = np.abs(mouth_ratio - pre_ratio)/pre_ratio
-        if change_ratio > tH:
-            return True
-        else:
-            return False
-    else:
-        hist_q.put(mouth_ratio)
-        return False
-"""
 
 
 def speak(tH, hist_q, shape):
@@ -68,26 +49,6 @@ def speak(tH, hist_q, shape):
         return True
     else:
         return False
-
-
-def drowseNspeak(tH_d, tH_s, s_queue, face_det, landmark, gray):
-    # detect faces
-    rects = face_det(gray, 0)
-    drowsy, speaking = False, False
-    # loop faces
-    # in this case, there should be only one face inside it
-    for rect in rects:
-        # detect facial landmarks
-        shape = landmark(gray, rect)
-        shape = shape_to_np(shape)
-
-        # extract eyes coordinates
-        left_eye = shape[42:48]
-        right_eye = shape[36: 42]
-        drowsy = drowse(tH_d, left_eye, right_eye)
-        speaking = speak(tH_s, s_queue, shape)
-
-    return [drowsy, speaking]
 
 
 def voor(tH_side, tH_ch, left_ratio_ori, chin_ori, shape, nFrame):

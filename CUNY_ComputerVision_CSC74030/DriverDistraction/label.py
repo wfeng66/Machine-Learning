@@ -10,13 +10,6 @@ def lab(vdFile, nFrameFast, fTime):
     while(cap.isOpened()):
         print(nFrame)
         ret, frame = cap.read()
-        # resize the frame
-        # scale_percent = 40  # percent of original size
-        # width = int(frame.shape[1] * scale_percent / 100)
-        # height = int(frame.shape[0] * scale_percent / 100)
-        # dim = (width, height)
-        # frame = cv2.resize(frame, dim)
-        # add information on the image
         cv2.putText(frame, "Frame #" + str(nFrame), (300, 200), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), 2)
         # set time of frame
         if nFrame > nFrameFast:

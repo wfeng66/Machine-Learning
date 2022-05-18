@@ -48,8 +48,7 @@ vgg16 = keras.models.load_model(dlpath)
 def cv(frame, left_ratio, chin, nFrame):
     # preprocess
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # [drowsy, speaking] = drowse1.drowseNspeak(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, speaking_q, face_det, landmark,
-    #                                           gray)
+    # detect distracted driving
     [drowsy, speaking, voor] = drowse1.detect(DROWSE_THRESHHOLD, SPEAKING_THRESHOLD, SIDE_THRESHOLD, CHIN_THRESHOLD,
                                               speaking_q, left_ratio, chin, face_det, landmark, gray, nFrame)
 
@@ -110,7 +109,6 @@ def detect_withTemporal(cap):
                 left_ratio, chin = drowse1.getFaceBase(face_det, landmark, cap)
             else:
                 cv_c = cv(frame, left_ratio, chin, count_frame)
-            # dl_c = dl(vgg16, frame)
             if cv_c ==3:
                 DROWSE_COUNT += 1
                 if DROWSE_COUNT < CONT_FRAME_DROWSE:
@@ -131,22 +129,6 @@ def detect_withTemporal(cap):
                 VOOR_COUNT = 0
             rslts.append([count_frame, cv_c])
         count_frame += 1
-    # compensate the frames before count for dangerous behaviors and short lost value
-    # for i in range(len(rslts)):
-    #     if rslts.loc[i, "cv_c"] == 3:
-    #         if i - CONT_FRAME_DROWSE > 0:
-    #             rslts.loc[i-CONT_FRAME_DROWSE:i, "cv_c"] = 3
-    #             if 3 in rslts.loc[i-CONT_FRAME_DROWSE*2: i-CONT_FRAME_DROWSE, "cv_c"].values:
-    #                 rslts.loc[i - CONT_FRAME_DROWSE * 2: i - CONT_FRAME_DROWSE, "cv_c"] = 3
-    #         else:
-    #             rslts.loc[:i, "cv_c"] = 3
-    #     if rslts.loc[i, "cv_c"] == 2:
-    #         if i - CONT_FRAME_SPEAKING > 0:
-    #             rslts.loc[i-CONT_FRAME_SPEAKING:i, "cv_c"] = 2
-    #             if 2 in rslts.loc[i-CONT_FRAME_SPEAKING*2: i-CONT_FRAME_SPEAKING, "cv_c"].values:
-    #                 rslts.loc[i - CONT_FRAME_SPEAKING * 2: i - CONT_FRAME_SPEAKING, "cv_c"] = 2
-    #         else:
-    #             rslts.loc[:i, "cv_c"] = 2
     return rslts
 
 
@@ -188,7 +170,6 @@ if __name__ == '__main__':
         rslt2['fName'] = vid
         rslt2 = compensate(rslt2)
         rslts2 = rslts2.append(rslt2.iloc[1:-1, :])
-        # print(len(rslt), len(rslts))
     rslts = pd.merge(rslts1, rslts2, on=['fName', 'nFrame'])
     rslts.to_csv(projpath + 'cv&dl.csv')
 
